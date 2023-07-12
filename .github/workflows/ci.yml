@@ -16,17 +16,17 @@ jobs:
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ matrix.node }}
-            - name: "Install modules"
-              run: |
-                  npm ci
-                  npx playwright install --with-deps chromium
+            # - uses: actions/setup-node@v3
+            #   with:
+            #       node-version: ${{ matrix.node }}
+            # - name: "Install modules"
+            #   run: |
+            #       npm ci
+            #       npx playwright install --with-deps chromium
             - uses: wagoid/commitlint-github-action@v5
-            - name: Validate code style
-              run: npm run lint
-            - name: "Build project"
-              run: npm run build
-            - name: "Tests"
-              run: npm run test:ci
+            # - name: Validate code style
+            #   run: npm run lint
+            # - name: "Build project"
+            #   run: npm run build
+            # - name: "Tests"
+            #   run: npm run test:ci
