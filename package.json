@@ -33,7 +33,7 @@
         "lint": "npx eslint **/*.{ts,tsx}",
         "lint:fix": "npx eslint **/*.{ts,tsx} --fix",
         "e2e": "playwright test --project=chromium && playwright show-report",
-        "test-ci": "CI=true npm test -- --reporters=\"default\" --reporters=\"jest-html-reporter\" --reporters=\"jest-teamcity\"",
+        "test:ci": "CI=true npm test -- --reporters=\"default\" --reporters=\"jest-html-reporter\" --reporters=\"jest-teamcity\"",
         "commitlint": "commitlint --edit",
         "prepare": "husky install"
     },
