@@ -23,7 +23,7 @@ jobs:
             #   run: |
             #       npm ci
             #       npx playwright install --with-deps chromium
-            - uses: wagoid/commitlint-github-action@v5
+            - uses: wagoid/commitlint-github-action@v4
             # - name: Validate code style
             #   run: npm run lint
             # - name: "Build project"
