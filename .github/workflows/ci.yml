@@ -60,12 +60,6 @@ jobs:
             group: ${{ github.workflow }}-${{ github.ref }}
         steps:
             - uses: actions/checkout@v3
-            - uses: google-github-actions/release-please-action@v3
-              id: changelog
-              with:
-                  release-type: node
-                  package-name: release-please-action
-                  token: ${{ secrets.GITHUB_TOKEN }}
             - uses: actions/download-artifact@v3
               with:
                   name: build
@@ -74,7 +68,9 @@ jobs:
             - name: Generate changelog
               uses: TriPSs/conventional-changelog-action@v3
               with:
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  github-token: ${{ secrets.github_token }}
+                  skip-commit: 'true'
+                  skip-git-pull: 'true'
 
             - name: Prepare tag
               id: prepare_tag
