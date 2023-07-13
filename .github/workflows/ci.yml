@@ -1,13 +1,9 @@
 name: CI
 on:
     push:
-        branches:
-            - master
         tags:
             - 'v*'
     pull_request:
-        branches:
-            - master
 
 jobs:
     ci:
@@ -53,6 +49,7 @@ jobs:
                   path: ./build
                   if-no-files-found: error
     deploy:
+        if: github.event_name == 'push'
         strategy:
             matrix:
                 os: [ubuntu-latest]
