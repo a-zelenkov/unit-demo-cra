@@ -32,10 +32,17 @@ jobs:
               run: npm run test:unit:ci
             - name: 'Tests: e2e'
               run: npm run test:e2e:ci
-            - name: Upload Artifacts
+            - name: 'Check dir'
+              run: ls -1
+            - name: Upload Artifacts (unit tests)
               uses: actions/upload-artifact@v3
               with:
-                  name: Test results
-                  path: |
-                      test-report.html
-                      playwright-report/
+                  name: Report (unit tests)
+                  path: test-report.html
+                  if-no-files-found: error
+            - name: Upload Artifacts (e2e tests)
+              uses: actions/upload-artifact@v3
+              with:
+                  name: Report (e2e tests)
+                  path: playwright-report/
+                  if-no-files-found: error
