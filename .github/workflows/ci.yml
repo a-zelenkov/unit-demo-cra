@@ -72,6 +72,8 @@ jobs:
               with:
                   skip-tag: 'true'
                   skip-version-file: 'true'
+                  skip-git-pull: 'true'
+                  skip-commit: 'true'
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 
             # - name: Prepare tag
