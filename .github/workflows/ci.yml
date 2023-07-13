@@ -32,8 +32,6 @@ jobs:
               run: npm run test:unit:ci
             - name: 'Tests: e2e'
               run: npm run test:e2e:ci
-            - name: 'Check dir'
-              run: ls -1
             - name: Upload Artifacts (unit tests)
               uses: actions/upload-artifact@v3
               with:
