@@ -19,16 +19,16 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                   node-version: ${{ matrix.node }}
-            - name: "Install modules"
+            - name: 'Install modules'
               run: |
                   npm ci
                   npx playwright install --with-deps chromium
             #- uses: wagoid/commitlint-github-action@v4
             - name: Validate code style
               run: npm run lint
-            - name: "Build project"
+            - name: 'Build project'
               run: npm run build
-            - name: "Tests: unit"
+            - name: 'Tests: unit'
               run: npm run test:unit:ci
-            - name: "Tests: e2e"
+            - name: 'Tests: e2e'
               run: npm run test:e2e:ci
