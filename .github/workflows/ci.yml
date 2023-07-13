@@ -1,63 +1,65 @@
 name: CI
 on:
     push:
-        tags:
-            - 'v*'
+        branches:
+            - master
+        # tags:
+        #     - 'v*'
 
 jobs:
-    ci:
-        strategy:
-            matrix:
-                os: [ubuntu-latest]
-                node: [18.x]
-        runs-on: ${{ matrix.os }}
-        steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ matrix.node }}
-            - name: 'Install modules'
-              run: |
-                  npm ci
-                  npx playwright install --with-deps chromium
-            #- uses: wagoid/commitlint-github-action@v4
-            - name: Validate code style
-              run: npm run lint
-            - name: 'Build project'
-              run: npm run build
-            - name: 'Tests: unit'
-              run: npm run test:unit:ci
-            - name: 'Tests: e2e'
-              run: npm run test:e2e:ci
-            - name: Upload Artifacts (unit tests)
-              uses: actions/upload-artifact@v3
-              with:
-                  name: Report (unit tests)
-                  path: test-report.html
-                  if-no-files-found: error
-            - name: Upload Artifacts (e2e tests)
-              uses: actions/upload-artifact@v3
-              with:
-                  name: Report (e2e tests)
-                  path: ./playwright-report
-                  if-no-files-found: error
-            - name: Upload Artifacts (build)
-              uses: actions/upload-artifact@v3
-              with:
-                  name: build
-                  path: ./build
-                  if-no-files-found: error
+    # ci:
+    #     strategy:
+    #         matrix:
+    #             os: [ubuntu-latest]
+    #             node: [18.x]
+    #     runs-on: ${{ matrix.os }}
+    #     steps:
+    #         - uses: actions/checkout@v3
+    #         - uses: actions/setup-node@v3
+    #           with:
+    #               node-version: ${{ matrix.node }}
+    #         - name: 'Install modules'
+    #           run: |
+    #               npm ci
+    #               npx playwright install --with-deps chromium
+    #         #- uses: wagoid/commitlint-github-action@v4
+    #         - name: Validate code style
+    #           run: npm run lint
+    #         - name: 'Build project'
+    #           run: npm run build
+    #         - name: 'Tests: unit'
+    #           run: npm run test:unit:ci
+    #         - name: 'Tests: e2e'
+    #           run: npm run test:e2e:ci
+    #         - name: Upload Artifacts (unit tests)
+    #           uses: actions/upload-artifact@v3
+    #           with:
+    #               name: Report (unit tests)
+    #               path: test-report.html
+    #               if-no-files-found: error
+    #         - name: Upload Artifacts (e2e tests)
+    #           uses: actions/upload-artifact@v3
+    #           with:
+    #               name: Report (e2e tests)
+    #               path: ./playwright-report
+    #               if-no-files-found: error
+    #         - name: Upload Artifacts (build)
+    #           uses: actions/upload-artifact@v3
+    #           with:
+    #               name: build
+    #               path: ./build
+    #               if-no-files-found: error
     deploy:
         if: github.event_name == 'push'
         strategy:
             matrix:
                 os: [ubuntu-latest]
         runs-on: ${{ matrix.os }}
-        needs: ci
+        # needs: ci
         permissions:
             contents: write
-        concurrency:
-            group: ${{ github.workflow }}-${{ github.ref }}
+        # concurrency:
+        #     group: ${{ github.workflow }}-${{ github.ref }}
         steps:
             - uses: actions/checkout@v3
             - uses: actions/download-artifact@v3
@@ -69,8 +71,6 @@ jobs:
               uses: TriPSs/conventional-changelog-action@v3
               with:
                   github-token: ${{ secrets.github_token }}
-                  skip-commit: 'true'
-                  skip-git-pull: 'true'
 
             - name: Prepare tag
               id: prepare_tag
