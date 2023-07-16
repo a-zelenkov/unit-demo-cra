@@ -84,11 +84,11 @@ jobs:
             #       skip-version-file: 'true'
             #       github-token: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Prepare tag
-              id: prepare_tag
-              if: startsWith(github.ref, 'refs/tags/')
-              run: |
-                  echo "DEPLOY_TAG_NAME=deploy-${TAG_NAME}" >> "${GITHUB_OUTPUT}"
+            # - name: Prepare tag
+            #   id: prepare_tag
+            #   if: startsWith(github.ref, 'refs/tags/')
+            #   run: |
+            #       echo "DEPLOY_TAG_NAME=deploy-${TAG_NAME}" >> "${GITHUB_OUTPUT}"
             - name: changelog
               run: |
                   git log --pretty="- %s" > CHANGELOG.md
@@ -98,5 +98,3 @@ jobs:
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
                   publish_dir: ./build
-                  tag_name: ${{ steps.prepare_tag.outputs.DEPLOY_TAG_NAME }}
-                  tag_message: 'Deployment ${{ github.ref_name }}'
