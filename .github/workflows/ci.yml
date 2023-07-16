@@ -77,12 +77,12 @@ jobs:
                   name: build
                   path: ./build
 
-            - name: Generate changelog
-              uses: TriPSs/conventional-changelog-action@v3
-              with:
-                  skip-tag: 'true'
-                  skip-version-file: 'true'
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
+            # - name: Generate changelog
+            #   uses: TriPSs/conventional-changelog-action@v3
+            #   with:
+            #       skip-tag: 'true'
+            #       skip-version-file: 'true'
+            #       github-token: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Prepare tag
               id: prepare_tag
