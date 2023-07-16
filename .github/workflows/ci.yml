@@ -27,17 +27,17 @@ jobs:
               run: |
                   npm ci
                   npx playwright install --with-deps chromium
-                  npm install conventional-changelog-conventionalcommits
-                  npm install commitlint@latest
-                  npm i -g @commitlint/cli @commitlint/config-conventional conventional-changelog-conventionalcommits
-            #- uses: wagoid/commitlint-github-action@v4
-            - name: Validate current commit (last commit) with commitlint
-              if: github.event_name == 'push'
-              run: npx commitlint --from HEAD~1 --to HEAD --verbose
+              #   npm install conventional-changelog-conventionalcommits
+              #   npm install commitlint@latest
+              #   npm i -g @commitlint/cli @commitlint/config-conventional conventional-changelog-conventionalcommits
+            - uses: wagoid/commitlint-github-action@v4
+            # - name: Validate current commit (last commit) with commitlint
+            #   if: github.event_name == 'push'
+            #   run: npx commitlint --from HEAD~1 --to HEAD --verbose
 
-            - name: Validate PR commits with commitlint
-              if: github.event_name == 'pull_request'
-              run: npx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose
+            # - name: Validate PR commits with commitlint
+            #   if: github.event_name == 'pull_request'
+            #   run: npx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose
             - name: Validate code style
               run: npm run lint
             - name: 'Build project'
@@ -77,17 +77,19 @@ jobs:
         #     group: ${{ github.workflow }}-${{ github.ref }}
         steps:
             - uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
             # - uses: actions/download-artifact@v3
             #   with:
             #       name: build
             #       path: ./build
 
-            # - name: Generate changelog
-            #   uses: TriPSs/conventional-changelog-action@v3
-            #   with:
-            #       skip-tag: 'true'
-            #       skip-version-file: 'true'
-            #       github-token: ${{ secrets.GITHUB_TOKEN }}
+            - name: Generate changelog
+              uses: TriPSs/conventional-changelog-action@v3
+              with:
+                  skip-tag: 'true'
+                  skip-version-file: 'true'
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
 
             # - name: Prepare tag
             #   id: prepare_tag
