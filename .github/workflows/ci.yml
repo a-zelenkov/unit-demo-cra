@@ -74,9 +74,9 @@ jobs:
                   GITHUB_REF: $
               run: |
                   export CURRENT_VERSION=${GITHUB_TAG/refs\/tags\/v/}
-                  echo "::set-env name=CURRENT_VERSION::$CURRENT_VERSION"
+                  echo "CURRENT_VERSION=$CURRENT_VERSION" >> "$GITHUB_ENV"
             - name: Checkout code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
               with:
                   ref: main
             - name: Update Changelog
@@ -103,10 +103,10 @@ jobs:
                   GITHUB_REF: $
               run: |
                   export CURRENT_VERSION=${GITHUB_TAG/refs\/tags\/v/}
-                  echo "::set-env name=CURRENT_VERSION::$CURRENT_VERSION"
+                  echo "CURRENT_VERSION=$CURRENT_VERSION" >> "$GITHUB_ENV"
 
             - name: Checkout code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
               with:
                   ref: main
 
