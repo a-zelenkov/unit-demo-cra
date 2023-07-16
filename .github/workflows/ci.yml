@@ -17,19 +17,24 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                   node-version: ${{ matrix.node }}
+            - name: Install required dependencies
+              run: |
+                  apt update
+                  apt install -y sudo
+                  sudo apt install -y git curl
+                  curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+                  sudo DEBIAN_FRONTEND=noninteractive apt install -y nodejs
             - name: 'Install modules'
               run: |
                   npm ci
                   npx playwright install --with-deps chromium
-                  npm i -g @commitlint/cli @commitlint/config-conventional conventional-changelog-conventionalcommits
+                  npm install conventional-changelog-conventionalcommits
+                  npm install commitlint@latest
             #- uses: wagoid/commitlint-github-action@v4
-            - name: Install required dependencies
-              run: |
-                  sudo apt update
-                  sudo apt install -y git
             - name: Validate current commit (last commit) with commitlint
               if: github.event_name == 'push'
               run: npx commitlint --from HEAD~1 --to HEAD --verbose
+
             - name: Validate PR commits with commitlint
               if: github.event_name == 'pull_request'
               run: npx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose
