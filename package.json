@@ -57,6 +57,7 @@
 		"conventional-changelog-conventionalcommits": "^6.1.0",
 		"@playwright/test": "^1.28.0",
 		"@types/react-helmet": "^6.1.5",
+		"commitlint": "^17.6.6",
 		"eslint": "^8.44.0",
 		"husky": "^8.0.3",
 		"jest-html-reporter": "^3.7.0"
