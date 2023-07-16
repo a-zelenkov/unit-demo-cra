@@ -92,26 +92,16 @@ jobs:
                   commit_message: Update Changelog for tag $
                   file_pattern: CHANGELOG.md
 
-    release_notes:
-        name: Create Release Notes
-        runs-on: ubuntu-latest
-        needs: changelog
-        steps:
             - name: Get version from tag
-              env:
-                  GITHUB_REF: $
+              id: tag_name
               run: |
-                  export CURRENT_VERSION=${GITHUB_TAG/refs\/tags\/v/}
-                  echo "CURRENT_VERSION=$CURRENT_VERSION" >> "$GITHUB_ENV"
+                  echo "CURRENT_VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_ENV"
 
-            - uses: actions/checkout@v3
-              with:
-                  fetch-depth: 0
             - name: Get Changelog Entry
               id: changelog_reader
-              uses: mindsers/changelog-reader-action@v1
+              uses: mindsers/changelog-reader-action@v2
               with:
-                  version: $
+                  version: ${{ steps.tag_name.outputs.CURRENT_VERSION }}
                   path: ./CHANGELOG.md
 
             - name: Create Release
@@ -125,6 +115,19 @@ jobs:
                   body: $
                   draft: false
                   prerelease: false
+
+            - name: Create/update release
+              uses: ncipollo/release-action@v1
+              with:
+                  # This pulls from the "Get Changelog Entry" step above, referencing it's ID to get its outputs object.
+                  # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+                  tag: ${{ steps.changelog_reader.outputs.version }}
+                  name: Release ${{ steps.changelog_reader.outputs.version }}
+                  body: ${{ steps.changelog_reader.outputs.changes }}
+                  prerelease: ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
+                  draft: ${{ steps.changelog_reader.outputs.status == 'unreleased' }}
+                  allowUpdates: true
+                  token: ${{ secrets.GITHUB_TOKEN }}
 
         # deploy:
         #     if: github.event_name == 'push'
