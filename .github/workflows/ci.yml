@@ -1,106 +1,171 @@
 name: CI
 on:
     push:
-        branches: master
-        # tags:
-        #     - 'v*'
+        # branches: master
+        tags:
+            - 'v\d+'
 
 jobs:
-    ci:
-        strategy:
-            matrix:
-                os: [ubuntu-latest]
-                node: [18.x]
-        runs-on: ${{ matrix.os }}
+    # ci:
+    #     strategy:
+    #         matrix:
+    #             os: [ubuntu-latest]
+    #             node: [18.x]
+    #     runs-on: ${{ matrix.os }}
+    #     steps:
+    #         - uses: actions/checkout@v3
+    #           with:
+    #               fetch-depth: 0
+    #         - uses: actions/setup-node@v3
+    #           with:
+    #               node-version: ${{ matrix.node }}
+    #         - name: Install required dependencies
+    #           run: |
+    #               sudo apt update
+    #               sudo apt install -y git
+    #         - name: 'Install modules'
+    #           run: |
+    #               npm ci
+    #               npx playwright install --with-deps chromium
+    #           #   npm install conventional-changelog-conventionalcommits
+    #           #   npm install commitlint@latest
+    #           #   npm i -g @commitlint/cli @commitlint/config-conventional conventional-changelog-conventionalcommits
+    #         - uses: wagoid/commitlint-github-action@v4
+    #         # - name: Validate current commit (last commit) with commitlint
+    #         #   if: github.event_name == 'push'
+    #         #   run: npx commitlint --from HEAD~1 --to HEAD --verbose
+
+    #         # - name: Validate PR commits with commitlint
+    #         #   if: github.event_name == 'pull_request'
+    #         #   run: npx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose
+    #         - name: Validate code style
+    #           run: npm run lint
+    #         - name: 'Build project'
+    #           run: npm run build
+    #         - name: 'Tests: unit'
+    #           run: npm run test:unit:ci
+    #         - name: 'Tests: e2e'
+    #           run: npm run test:e2e:ci
+    #         - name: Upload Artifacts (unit tests)
+    #           uses: actions/upload-artifact@v3
+    #           with:
+    #               name: Report (unit tests)
+    #               path: test-report.html
+    #               if-no-files-found: error
+    #         - name: Upload Artifacts (e2e tests)
+    #           uses: actions/upload-artifact@v3
+    #           with:
+    #               name: Report (e2e tests)
+    #               path: ./playwright-report
+    #               if-no-files-found: error
+    #         - name: Upload Artifacts (build)
+    #           uses: actions/upload-artifact@v3
+    #           with:
+    #               name: build
+    #               path: ./build
+    #               if-no-files-found: error
+
+    changelog:
+        name: Update Changelog
+        runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-              with:
-                  fetch-depth: 0
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ matrix.node }}
-            - name: Install required dependencies
+            - name: Get version from tag
+              env:
+                  GITHUB_REF: $
               run: |
-                  sudo apt update
-                  sudo apt install -y git
-            - name: 'Install modules'
-              run: |
-                  npm ci
-                  npx playwright install --with-deps chromium
-              #   npm install conventional-changelog-conventionalcommits
-              #   npm install commitlint@latest
-              #   npm i -g @commitlint/cli @commitlint/config-conventional conventional-changelog-conventionalcommits
-            - uses: wagoid/commitlint-github-action@v4
-            # - name: Validate current commit (last commit) with commitlint
-            #   if: github.event_name == 'push'
-            #   run: npx commitlint --from HEAD~1 --to HEAD --verbose
+                  export CURRENT_VERSION=${GITHUB_TAG/refs\/tags\/v/}
+                  echo "::set-env name=CURRENT_VERSION::$CURRENT_VERSION"
+            - name: Checkout code
+              uses: actions/checkout@v2
+              with:
+                  ref: main
+            - name: Update Changelog
+              uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+              with:
+                  token: $
+                  issues: true
+                  issuesWoLabels: true
+                  pullRequests: true
+                  prWoLabels: true
+                  addSections: '{"documentation":{"prefix":" **Documentation:**","labels":["documentation"]}}'
+            - uses: stefanzweifel/git-auto-commit-action@v4
+              with:
+                  commit_message: Update Changelog for tag $
+                  file_pattern: CHANGELOG.md
 
-            # - name: Validate PR commits with commitlint
-            #   if: github.event_name == 'pull_request'
-            #   run: npx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose
-            - name: Validate code style
-              run: npm run lint
-            - name: 'Build project'
-              run: npm run build
-            - name: 'Tests: unit'
-              run: npm run test:unit:ci
-            - name: 'Tests: e2e'
-              run: npm run test:e2e:ci
-            - name: Upload Artifacts (unit tests)
-              uses: actions/upload-artifact@v3
-              with:
-                  name: Report (unit tests)
-                  path: test-report.html
-                  if-no-files-found: error
-            - name: Upload Artifacts (e2e tests)
-              uses: actions/upload-artifact@v3
-              with:
-                  name: Report (e2e tests)
-                  path: ./playwright-report
-                  if-no-files-found: error
-            - name: Upload Artifacts (build)
-              uses: actions/upload-artifact@v3
-              with:
-                  name: build
-                  path: ./build
-                  if-no-files-found: error
-    deploy:
-        if: github.event_name == 'push'
-        strategy:
-            matrix:
-                os: [ubuntu-latest]
-        runs-on: ${{ matrix.os }}
-        # needs: ci
-        permissions:
-            contents: write
-        # concurrency:
-        #     group: ${{ github.workflow }}-${{ github.ref }}
+    release_notes:
+        name: Create Release Notes
+        runs-on: ubuntu-latest
+        needs: changelog
         steps:
-            - uses: actions/checkout@v3
+            - name: Get version from tag
+              env:
+                  GITHUB_REF: $
+              run: |
+                  export CURRENT_VERSION=${GITHUB_TAG/refs\/tags\/v/}
+                  echo "::set-env name=CURRENT_VERSION::$CURRENT_VERSION"
+
+            - name: Checkout code
+              uses: actions/checkout@v2
               with:
-                  fetch-depth: 0
-            # - uses: actions/download-artifact@v3
-            #   with:
-            #       name: build
-            #       path: ./build
+                  ref: main
 
-            - name: Generate changelog
-              uses: TriPSs/conventional-changelog-action@v3
+            - name: Get Changelog Entry
+              id: changelog_reader
+              uses: mindsers/changelog-reader-action@v1
               with:
-                  skip-tag: 'true'
-                  skip-version-file: 'true'
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  version: $
+                  path: ./CHANGELOG.md
 
-            # - name: Prepare tag
-            #   id: prepare_tag
-            #   if: startsWith(github.ref, 'refs/tags/')
-            #   run: |
-            #       echo "DEPLOY_TAG_NAME=deploy-${TAG_NAME}" >> "${GITHUB_OUTPUT}"
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: $ # This token is provided by Actions, you do not need to create your own token
+              with:
+                  tag_name: $
+                  release_name: Release $
+                  body: $
+                  draft: false
+                  prerelease: false
 
-            # - name: Deploy
-            #   uses: peaceiris/actions-gh-pages@v3
-            #   with:
-            #       github_token: ${{ secrets.GITHUB_TOKEN }}
-            #       publish_dir: ./build
-            #       tag_name: ${{ steps.prepare_tag.outputs.DEPLOY_TAG_NAME }}
-            #       tag_message: 'Deployment ${{ github.ref_name }}'
+        # deploy:
+        #     if: github.event_name == 'push'
+        #     strategy:
+        #         matrix:
+        #             os: [ubuntu-latest]
+        #     runs-on: ${{ matrix.os }}
+        #     # needs: ci
+        #     permissions:
+        #         contents: write
+        #     # concurrency:
+        #     #     group: ${{ github.workflow }}-${{ github.ref }}
+        #     steps:
+        #         - uses: actions/checkout@v3
+        #           with:
+        #               fetch-depth: 0
+        #         # - uses: actions/download-artifact@v3
+        #         #   with:
+        #         #       name: build
+        #         #       path: ./build
+
+        #         - name: Generate changelog
+        #           uses: TriPSs/conventional-changelog-action@v3
+        #           with:
+        #               skip-tag: 'true'
+        #               skip-version-file: 'true'
+        #               github-token: ${{ secrets.GITHUB_TOKEN }}
+
+        #         # - name: Prepare tag
+        #         #   id: prepare_tag
+        #         #   if: startsWith(github.ref, 'refs/tags/')
+        #         #   run: |
+        #         #       echo "DEPLOY_TAG_NAME=deploy-${TAG_NAME}" >> "${GITHUB_OUTPUT}"
+
+        #         # - name: Deploy
+        #         #   uses: peaceiris/actions-gh-pages@v3
+        #         #   with:
+        #         #       github_token: ${{ secrets.GITHUB_TOKEN }}
+        #         #       publish_dir: ./build
+        #         #       tag_name: ${{ steps.prepare_tag.outputs.DEPLOY_TAG_NAME }}
+        #         #       tag_message: 'Deployment ${{ github.ref_name }}'
