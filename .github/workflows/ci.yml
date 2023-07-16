@@ -27,6 +27,7 @@ jobs:
     #           run: |
     #               npm ci
     #               npx playwright install --with-deps chromium
+    #               npm install generate-changelog -g
     #           #   npm install conventional-changelog-conventionalcommits
     #           #   npm install commitlint@latest
     #           #   npm i -g @commitlint/cli @commitlint/config-conventional conventional-changelog-conventionalcommits
@@ -78,6 +79,12 @@ jobs:
             - uses: actions/checkout@v3
               with:
                   fetch-depth: 0
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: '18'
+            - name: 'Install modules'
+              run: |
+                  npm install generate-changelog -g
             - name: Update Changelog
               uses: heinrichreimer/github-changelog-generator-action@v2.1.1
               with:
@@ -97,36 +104,41 @@ jobs:
               run: |
                   echo "CURRENT_VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_ENV"
 
-            - name: Get Changelog Entry
-              id: changelog_reader
-              uses: mindsers/changelog-reader-action@v2
-              with:
-                  version: ${{ steps.tag_name.outputs.CURRENT_VERSION }}
+            - name: changelog
+              run: |
+                  changelog generate
+                  cat CHANGELOG.md
 
-            - name: Create/update release
-              uses: ncipollo/release-action@v1
-              with:
-                  # This pulls from the "Get Changelog Entry" step above, referencing it's ID to get its outputs object.
-                  # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-                  tag: ${{ steps.changelog_reader.outputs.version }}
-                  name: Release ${{ steps.changelog_reader.outputs.version }}
-                  body: ${{ steps.changelog_reader.outputs.changes }}
-                  prerelease: ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
-                  draft: ${{ steps.changelog_reader.outputs.status == 'unreleased' }}
-                  allowUpdates: true
-                  token: ${{ secrets.GITHUB_TOKEN }}
+            # - name: Get Changelog Entry
+            #   id: changelog_reader
+            #   uses: mindsers/changelog-reader-action@v2
+            #   with:
+            #       version: ${{ steps.tag_name.outputs.CURRENT_VERSION }}
 
-            - name: Create Release
-              id: create_release
-              uses: actions/create-release@v1
-              env:
-                  GITHUB_TOKEN: $ # This token is provided by Actions, you do not need to create your own token
-              with:
-                  tag_name: $
-                  release_name: Release $
-                  body: $
-                  draft: false
-                  prerelease: false
+            # - name: Create/update release
+            #   uses: ncipollo/release-action@v1
+            #   with:
+            #       # This pulls from the "Get Changelog Entry" step above, referencing it's ID to get its outputs object.
+            #       # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+            #       tag: ${{ steps.changelog_reader.outputs.version }}
+            #       name: Release ${{ steps.changelog_reader.outputs.version }}
+            #       body: ${{ steps.changelog_reader.outputs.changes }}
+            #       prerelease: ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
+            #       draft: ${{ steps.changelog_reader.outputs.status == 'unreleased' }}
+            #       allowUpdates: true
+            #       token: ${{ secrets.GITHUB_TOKEN }}
+
+            # - name: Create Release
+            #   id: create_release
+            #   uses: actions/create-release@v1
+            #   env:
+            #       GITHUB_TOKEN: $ # This token is provided by Actions, you do not need to create your own token
+            #   with:
+            #       tag_name: $
+            #       release_name: Release $
+            #       body: $
+            #       draft: false
+            #       prerelease: false
 
         # deploy:
         #     if: github.event_name == 'push'
