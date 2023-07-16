@@ -5,48 +5,55 @@ on:
             - 'v*'
 
 jobs:
-    # ci:
-    #     strategy:
-    #         matrix:
-    #             os: [ubuntu-latest]
-    #             node: [18.x]
-    #     runs-on: ${{ matrix.os }}
-    #     steps:
-    #         - uses: actions/checkout@v3
-    #         - uses: actions/setup-node@v3
-    #           with:
-    #               node-version: ${{ matrix.node }}
-    #         - name: 'Install modules'
-    #           run: |
-    #               npm ci
-    #               npx playwright install --with-deps chromium
-    #         #- uses: wagoid/commitlint-github-action@v4
-    #         - name: Validate code style
-    #           run: npm run lint
-    #         - name: 'Build project'
-    #           run: npm run build
-    #         - name: 'Tests: unit'
-    #           run: npm run test:unit:ci
-    #         - name: 'Tests: e2e'
-    #           run: npm run test:e2e:ci
-    #         - name: Upload Artifacts (unit tests)
-    #           uses: actions/upload-artifact@v3
-    #           with:
-    #               name: Report (unit tests)
-    #               path: test-report.html
-    #               if-no-files-found: error
-    #         - name: Upload Artifacts (e2e tests)
-    #           uses: actions/upload-artifact@v3
-    #           with:
-    #               name: Report (e2e tests)
-    #               path: ./playwright-report
-    #               if-no-files-found: error
-    #         - name: Upload Artifacts (build)
-    #           uses: actions/upload-artifact@v3
-    #           with:
-    #               name: build
-    #               path: ./build
-    #               if-no-files-found: error
+    ci:
+        strategy:
+            matrix:
+                os: [ubuntu-latest]
+                node: [18.x]
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ matrix.node }}
+            - name: 'Install modules'
+              run: |
+                  npm ci
+                  npx playwright install --with-deps chromium
+                  npm i -g @commitlint/cli @commitlint/config-conventional conventional-changelog-conventionalcommits
+            #- uses: wagoid/commitlint-github-action@v4
+            - name: Validate current commit (last commit) with commitlint
+              if: github.event_name == 'push'
+              run: npx commitlint --from HEAD~1 --to HEAD --verbose
+            - name: Validate PR commits with commitlint
+              if: github.event_name == 'pull_request'
+              run: npx commitlint --from ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }} --to ${{ github.event.pull_request.head.sha }} --verbose
+            - name: Validate code style
+              run: npm run lint
+            - name: 'Build project'
+              run: npm run build
+            - name: 'Tests: unit'
+              run: npm run test:unit:ci
+            - name: 'Tests: e2e'
+              run: npm run test:e2e:ci
+            - name: Upload Artifacts (unit tests)
+              uses: actions/upload-artifact@v3
+              with:
+                  name: Report (unit tests)
+                  path: test-report.html
+                  if-no-files-found: error
+            - name: Upload Artifacts (e2e tests)
+              uses: actions/upload-artifact@v3
+              with:
+                  name: Report (e2e tests)
+                  path: ./playwright-report
+                  if-no-files-found: error
+            - name: Upload Artifacts (build)
+              uses: actions/upload-artifact@v3
+              with:
+                  name: build
+                  path: ./build
+                  if-no-files-found: error
     deploy:
         if: github.event_name == 'push'
         strategy:
@@ -65,12 +72,12 @@ jobs:
             #       name: build
             #       path: ./build
 
-            - name: Generate changelog
-              uses: TriPSs/conventional-changelog-action@v3
-              with:
-                  skip-tag: 'true'
-                  skip-version-file: 'true'
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
+            # - name: Generate changelog
+            #   uses: TriPSs/conventional-changelog-action@v3
+            #   with:
+            #       skip-tag: 'true'
+            #       skip-version-file: 'true'
+            #       github-token: ${{ secrets.GITHUB_TOKEN }}
 
             # - name: Prepare tag
             #   id: prepare_tag
